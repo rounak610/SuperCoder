@@ -15,7 +15,7 @@ export default function Browser({ url, status }: BrowserProps) {
   return (
     <div
       id={'browser'}
-      className={'flex w-full flex-col gap-[6px] border-none'}
+      className={'flex w-full flex-col gap-[6px] border-none p-2'}
     >
       <CustomInput
         format={'text'}
@@ -29,9 +29,7 @@ export default function Browser({ url, status }: BrowserProps) {
         <iframe
           key={iframeKey}
           src={url}
-          className={
-            'h-[200%] w-[200%] origin-top-left scale-50 border-none bg-white'
-          }
+          className={'h-full w-full border-none bg-white'}
           loading={'lazy'}
         />
       </div>
