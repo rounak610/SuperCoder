@@ -192,7 +192,6 @@ func main() {
 
 	//GenerateCodeStep
 	err = c.Provide(impl.NewOpenAICodeGenerator)
-	err = c.Provide(impl.NewOpenAICodeGenerator)
 	if err != nil {
 		log.Println("Error providing generate code step:", err)
 		panic(err)
@@ -211,15 +210,7 @@ func main() {
 
 	}
 	//FLASK serverStartTestStep
-	//FLASK serverStartTestStep
 	err = c.Provide(impl.NewFlaskServerStartTestExecutor)
-	if err != nil {
-		log.Println("Error providing server start test step:", err)
-		panic(err)
-
-	}
-	//DJANGO serverStartTestStep
-	err = c.Provide(impl.NewDjangoServerStartTestExecutor)
 	if err != nil {
 		log.Println("Error providing server start test step:", err)
 		panic(err)
