@@ -28,6 +28,9 @@ Based on the error description and the current code, you must choose ONE of the 
 2. Add code:
    Insert the code in the given file path below the `line_number`.
 
+3. Create file:
+   Provide the code to be written in the new file.
+
 Provide your response in JSON format, following one of these structures:
 
 For editing code:
@@ -43,6 +46,13 @@ For inserting code:
     "type": "insert",
     "line_number": Line number,
     "new_code": Code snippet
+}
+
+For creating file:
+{
+    "type": "create",
+    "file_path": "path/to/file",
+    "code": code to be written in the new file
 }
 
 Guidelines for code editing and inserting:

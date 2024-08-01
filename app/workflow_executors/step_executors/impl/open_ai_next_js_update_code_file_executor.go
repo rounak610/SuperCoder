@@ -89,17 +89,21 @@ func (e NextJsUpdateCodeFileExecutor) Execute(step steps.UpdateCodeFileStep) err
 func (e *NextJsUpdateCodeFileExecutor) UpdateReGeneratedCodeFile(response Response, step steps.UpdateCodeFileStep) error {
 	var llmResponse map[string]interface{}
 	var filePath string
-	if response.FileName == "package.json" {
-		filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/" + response.FileName
-	} else if strings.Contains(response.FileName, "app/") {
-		filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/" + response.FileName
+	if response.FileName == "globals.css" || response.FileName == "layout.tsx" || response.FileName == "page.tsx"{
+		if strings.Contains(response.FileName, "app/") {
+			filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/" + response.FileName
+		} else {
+			filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/app/" + response.FileName
+		}
 	} else {
-		filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/app/" + response.FileName
+		filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/" + response.FileName
 	}
+	fmt.Println("______filePath: ______", filePath)
 	err := json.Unmarshal([]byte(response.LLMResponse), &llmResponse)
 	if err != nil {
 		return nil
 	}
+	fmt.Println("____llmResponse____", llmResponse)
 	switch llmResponse["type"].(string) {
 	case "edit", "update":
 		newCode := llmResponse["new_code"].(string)
@@ -122,7 +126,7 @@ func (e *NextJsUpdateCodeFileExecutor) UpdateReGeneratedCodeFile(response Respon
 			fmt.Println("Error editing code: ", err)
 			return err
 		}
-	case "insert", "create":
+	case "insert":
 		var lineNumber int
 		switch lineVal := llmResponse["line_number"].(type) {
 		case float64:
@@ -136,6 +140,13 @@ func (e *NextJsUpdateCodeFileExecutor) UpdateReGeneratedCodeFile(response Respon
 			fmt.Printf("Error inserting code: %v\n", err)
 			return err
 		}
+	case "create":
+		newCode := llmResponse["code"].(string)
+        err := e.CreateCode(filePath, newCode)
+        if err!= nil {
+            fmt.Printf("Error creating file: %v\n", err)
+            return err
+        }
 	default:
 		fmt.Println("Unknown llmResponse:", llmResponse["type"].(string))
 		return fmt.Errorf("unknown response type: %s", llmResponse["type"])
@@ -143,6 +154,18 @@ func (e *NextJsUpdateCodeFileExecutor) UpdateReGeneratedCodeFile(response Respon
 	return nil
 }
 
+func (e *NextJsUpdateCodeFileExecutor) CreateCode(filePath string, newCode string) error {
+	file, err := os.Create(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = file.WriteString(newCode)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (e *NextJsUpdateCodeFileExecutor) EditCode(filePath string, startLine, endLine int, newCode string) error {
 	fmt.Printf("____Editing file %s_____", filePath)
 	fmt.Println("Start Line:", startLine)

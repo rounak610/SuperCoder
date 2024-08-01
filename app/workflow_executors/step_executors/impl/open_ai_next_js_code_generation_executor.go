@@ -276,7 +276,7 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionForFirstEx
 		"existingCode": string(code),
 		"base64Image":  base64Image,
 		"fileName":     step.File,
-		"feedback":     "Try to replicate original screenshot.",
+		"feedback":     "Try to replicate original screenshot. There is a component in src/side_bar.tsx use that component",
 		"imageType":    imageType,
 	}, nil
 }
