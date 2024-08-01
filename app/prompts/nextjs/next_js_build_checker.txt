@@ -64,3 +64,4 @@ Examples to clarify:
 
 
 Remember to analyze the build logs thoroughly and provide a clear, concise explanation of the issue and the proposed solution in the "description" field. Do not include the ```json and ``` markers in your response.
+If there are any imports in the code for which there are no files in the directory, then call the create action and suggest to create that file.

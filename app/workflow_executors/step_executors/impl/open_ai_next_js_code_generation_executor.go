@@ -28,7 +28,7 @@ type OpenAiNextJsCodeGenerator struct {
 	designReviewService  *services.DesignStoryReviewService
 	llmAPIKeyService     *services.LLMAPIKeyService
 	logger               *zap.Logger
-	fileStore 	      filestore.FileStore 
+	fileStore            filestore.FileStore
 }
 
 func NewOpenAINextJsCodeGenerationExecutor(
@@ -51,7 +51,7 @@ func NewOpenAINextJsCodeGenerationExecutor(
 		designReviewService:  designReviewService,
 		llmAPIKeyService:     llmAPIKeyService,
 		logger:               logger,
-		fileStore: 	      fileStore,
+		fileStore:            fileStore,
 	}
 }
 
@@ -256,15 +256,15 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionForFirstEx
 		return nil, err
 	}
 	filePathCloser, err := openAiCodeGenerator.fileStore.ReadFile(storyFile.FilePath)
-	if err!= nil {
+	if err != nil {
 		openAiCodeGenerator.logger.Error("Error reading file______", zap.Error(err))
-        return nil, err
-    }
+		return nil, err
+	}
 	base64Image, imageType, err := utils.EncodeToBase64(filePathCloser)
-	if err!= nil {
-        openAiCodeGenerator.logger.Error("Error encoding to base64____", zap.Error(err))
-        return nil, err
-    }
+	if err != nil {
+		openAiCodeGenerator.logger.Error("Error encoding to base64____", zap.Error(err))
+		return nil, err
+	}
 
 	filePath := filepath.Join(storyDir, "app", step.File)
 	code, err := os.ReadFile(filePath)
@@ -276,7 +276,7 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionForFirstEx
 		"existingCode": string(code),
 		"base64Image":  base64Image,
 		"fileName":     step.File,
-		"feedback":     "Try to replicate original screenshot. There is a component in src/side_bar.tsx use that component",
+		"feedback":     "Try to replicate original screenshot. There is a component in app/side_bar.tsx use that component",
 		"imageType":    imageType,
 	}, nil
 }
@@ -340,8 +340,12 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionOnRetry(st
 	filePath := filepath.Join(storyDir, fileName)
 	code, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Println("Error getting code: ", err.Error())
-		return nil, err
+		if os.IsNotExist(err) {
+			code = []byte("") // Set code to an empty string if the file is not found
+		} else {
+			fmt.Println("Error getting code:", err.Error())
+			return nil, err
+		}
 	}
 
 	return map[string]string{
@@ -386,15 +390,15 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionOnReExecut
 		return nil, err
 	}
 	filePathCloser, err := openAiCodeGenerator.fileStore.ReadFile(storyFile.FilePath)
-	if err!= nil {
+	if err != nil {
 		openAiCodeGenerator.logger.Error("Error reading file______", zap.Error(err))
-        return nil, err
-    }
+		return nil, err
+	}
 	base64Image, imageType, err := utils.EncodeToBase64(filePathCloser)
-	if err!= nil {
-        openAiCodeGenerator.logger.Error("Error encoding to base64____", zap.Error(err))
-        return nil, err
-    }
+	if err != nil {
+		openAiCodeGenerator.logger.Error("Error encoding to base64____", zap.Error(err))
+		return nil, err
+	}
 
 	return map[string]string{
 		"existingCode": string(code),
@@ -453,7 +457,7 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) ProcessMessageResponse(mes
 func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) GenerateCodeOnRetry(executionStep *models.ExecutionStep, instruction map[string]string, storyDir string, apiKey string) (string, error) {
 	switch instruction["actionType"] {
 	case "create":
-		filePath := storyDir + instruction["fileName"]
+		filePath := filepath.Join(storyDir, instruction["fileName"])
 		fmt.Printf("Creating new file at %s\n", filePath)
 		if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 			fmt.Printf("Error creating directory: %v\n", err)
@@ -463,7 +467,11 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) GenerateCodeOnRetry(execut
 			fmt.Printf("Error creating file: %v\n", err)
 			return "", err
 		}
-		return "", nil
+		response, err := openAiCodeGenerator.EditCodeOnRetry(instruction, storyDir, executionStep, apiKey)
+		if err != nil {
+			return "", err
+		}
+		return response, nil
 	case "terminal":
 		command := instruction["command"]
 		cwd := filepath.Join(storyDir, instruction["cwd"])
