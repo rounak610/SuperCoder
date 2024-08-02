@@ -98,12 +98,10 @@ func (e *NextJsUpdateCodeFileExecutor) UpdateReGeneratedCodeFile(response Respon
 	} else {
 		filePath = config.FrontendWorkspacePath(step.Project.HashID, step.Story.HashID) + "/" + response.FileName
 	}
-	fmt.Println("______filePath: ______", filePath)
 	err := json.Unmarshal([]byte(response.LLMResponse), &llmResponse)
 	if err != nil {
 		return nil
 	}
-	fmt.Println("____llmResponse____", llmResponse)
 	switch llmResponse["type"].(string) {
 	case "edit", "update":
 		newCode := llmResponse["new_code"].(string)
@@ -142,11 +140,11 @@ func (e *NextJsUpdateCodeFileExecutor) UpdateReGeneratedCodeFile(response Respon
 		}
 	case "create":
 		newCode := llmResponse["code"].(string)
-        err := e.CreateCode(filePath, newCode)
-        if err!= nil {
-            fmt.Printf("Error creating file: %v\n", err)
-            return err
-        }
+		err := e.CreateCode(filePath, newCode)
+		if err!= nil {
+		fmt.Printf("Error creating file: %v\n", err)
+		return err
+		}
 	default:
 		fmt.Println("Unknown llmResponse:", llmResponse["type"].(string))
 		return fmt.Errorf("unknown response type: %s", llmResponse["type"])

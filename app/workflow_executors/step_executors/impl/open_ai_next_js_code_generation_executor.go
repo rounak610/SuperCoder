@@ -276,7 +276,7 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionForFirstEx
 		"existingCode": string(code),
 		"base64Image":  base64Image,
 		"fileName":     step.File,
-		"feedback":     "Try to replicate original screenshot. There is a component in app/side_bar.tsx use that component",
+		"feedback":     "Try to replicate original screenshot.",
 		"imageType":    imageType,
 	}, nil
 }
@@ -341,7 +341,7 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) buildInstructionOnRetry(st
 	code, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			code = []byte("") // Set code to an empty string if the file is not found
+			code = []byte("")
 		} else {
 			fmt.Println("Error getting code:", err.Error())
 			return nil, err
