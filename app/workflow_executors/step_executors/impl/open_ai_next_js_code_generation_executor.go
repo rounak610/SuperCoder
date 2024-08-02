@@ -467,7 +467,8 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) GenerateCodeOnRetry(execut
 			fmt.Printf("Error creating file: %v\n", err)
 			return "", err
 		}
-		response, err := openAiCodeGenerator.EditCodeOnRetry(instruction, storyDir, executionStep, apiKey)
+		createNewFile := true
+		response, err := openAiCodeGenerator.EditCodeOnRetry(instruction, storyDir, executionStep, apiKey, createNewFile)
 		if err != nil {
 			return "", err
 		}
@@ -486,7 +487,7 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) GenerateCodeOnRetry(execut
 		}
 		return "", nil
 	case "edit":
-		response, err := openAiCodeGenerator.EditCodeOnRetry(instruction, storyDir, executionStep, apiKey)
+		response, err := openAiCodeGenerator.EditCodeOnRetry(instruction, storyDir, executionStep, apiKey, false)
 		if err != nil {
 			return "", err
 		}
@@ -497,10 +498,17 @@ func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) GenerateCodeOnRetry(execut
 	}
 }
 
-func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) EditCodeOnRetry(instruction map[string]string, storyDir string, executionStep *models.ExecutionStep, apiKey string) (string, error) {
+func (openAiCodeGenerator *OpenAiNextJsCodeGenerator) EditCodeOnRetry(instruction map[string]string, storyDir string, executionStep *models.ExecutionStep, apiKey string, createNewFile bool) (string, error) {
 	generationPlan, err := openAiCodeGenerator.GetCodeGenerationPlan(storyDir)
 	if err != nil {
 		return "", err
+	}
+	if createNewFile {
+		code, err := openAiCodeGenerator.getFilesContent(storyDir)
+		if err!= nil {
+                        return "", err
+                }
+		instruction["existingCode"] = code
 	}
 	systemPrompt, err := openAiCodeGenerator.GetRetrySystemPrompt(instruction, generationPlan)
 	if err != nil {
